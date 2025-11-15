@@ -1,23 +1,36 @@
 FROM python:3.11-slim
 
-# Set a working directory
-WORKDIR /app
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system deps required for some wheels (kept minimal)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    gcc \
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    unzip \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+WORKDIR /app
+
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+RUN pip install playwright && playwright install chromium
+
 COPY . .
 
-# Expose port and start
-ENV PORT=10000
 EXPOSE 10000
-CMD ["gunicorn", "server:app", "--bind", "0.0.0.0:10000", "--workers", "1", "--timeout", "120"]
+
+CMD ["python", "server.py"]
